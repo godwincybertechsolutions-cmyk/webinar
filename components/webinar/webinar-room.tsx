@@ -234,16 +234,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
     setIsAudioEnabled(!isAudioEnabled);
   };
 
-  const loadChatMessages = async () => {
-    const { data } = await supabase
-      .from("chat_messages")
-      .select("*, profiles:user_id(full_name)")
-      .eq("webinar_id", webinar.id)
-      .order("created_at", { ascending: true })
-      .limit(50);
-
-    if (data) setMessages(data);
-  };
+  
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -261,27 +252,9 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
     }
   };
 
-  const loadTranscripts = async () => {
-    const { data } = await supabase
-      .from("transcripts")
-      .select("*")
-      .eq("webinar_id", webinar.id)
-      .order("timestamp", { ascending: true })
-      .limit(100);
+  
 
-    if (data) setTranscripts(data);
-  };
-
-  const loadQAHistory = async () => {
-    const { data } = await supabase
-      .from("qa_questions")
-      .select("*, profiles:user_id(full_name)")
-      .eq("webinar_id", webinar.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    if (data) setQaHistory(data);
-  };
+  
 
   const askQuestion = async () => {
     if (!question.trim()) return;
