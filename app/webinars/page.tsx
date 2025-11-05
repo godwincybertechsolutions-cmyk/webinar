@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Image from "next/image";
 
 interface Webinar {
   id: string;
@@ -28,11 +29,7 @@ export default function WebinarsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "upcoming" | "live">("all");
 
-  useEffect(() => {
-    loadWebinars();
-  }, [filter]);
-
-  const loadWebinars = async () => {
+  const loadWebinars = useCallback(async () => {
     try {
       let query = supabase
         .from("webinars")
@@ -54,7 +51,11 @@ export default function WebinarsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadWebinars();
+  }, [loadWebinars]);
 
   const handleRegister = async (webinarId: string) => {
     try {
@@ -140,10 +141,12 @@ export default function WebinarsPage() {
                 <Card className="hover:shadow-lg transition-shadow">
                   {webinar.thumbnail_url && (
                     <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
-                      <img
+                      <Image
                         src={webinar.thumbnail_url}
                         alt={webinar.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </div>
                   )}

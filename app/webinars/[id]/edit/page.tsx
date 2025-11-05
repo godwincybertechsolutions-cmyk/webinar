@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,13 +24,7 @@ export default function EditWebinarPage({ params }: { params: Promise<{ id: stri
     thumbnail_url: "",
   });
 
-  useEffect(() => {
-    if (resolvedParams.id) {
-      loadWebinar();
-    }
-  }, [resolvedParams.id]);
-
-  const loadWebinar = async () => {
+  const loadWebinar = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("webinars")
@@ -54,7 +48,13 @@ export default function EditWebinarPage({ params }: { params: Promise<{ id: stri
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedParams.id]);
+
+  useEffect(() => {
+    if (resolvedParams.id) {
+      loadWebinar();
+    }
+  }, [resolvedParams.id, loadWebinar]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
