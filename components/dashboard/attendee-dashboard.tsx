@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,11 +27,7 @@ export function AttendeeDashboard({ userId }: { userId: string }) {
   const [webinars, setWebinars] = useState<RegisteredWebinar[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadWebinars();
-  }, [userId]);
-
-  const loadWebinars = async () => {
+  const loadWebinars = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("webinar_registrations")
@@ -47,7 +43,11 @@ export function AttendeeDashboard({ userId }: { userId: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadWebinars();
+  }, [loadWebinars]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -78,7 +78,7 @@ export function AttendeeDashboard({ userId }: { userId: string }) {
         <Card>
           <CardHeader>
             <CardTitle>Registered Webinars</CardTitle>
-            <CardDescription>Webinars you've registered for</CardDescription>
+            <CardDescription>Webinars you&apos;ve registered for</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (

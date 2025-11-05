@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, ArrowLeft } from "lucide-react";
@@ -16,11 +16,7 @@ export function WebinarSummary({ webinar }: WebinarSummaryProps) {
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSummary();
-  }, [webinar.id]);
-
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     try {
       const response = await fetch(`/api/webinars/${webinar.id}/summary`);
       const data = await response.json();
@@ -30,7 +26,11 @@ export function WebinarSummary({ webinar }: WebinarSummaryProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [webinar.id]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
 
   const exportToPDF = () => {
     if (!summary) return;

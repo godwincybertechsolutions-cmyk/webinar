@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Room, RoomEvent, RemoteParticipant, RemoteTrack, RemoteTrackPublication } from "livekit-client";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,35 +33,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
   const localAudioTrackRef = useRef<any>(null);
   const localVideoTrackRef = useRef<any>(null);
 
-  useEffect(() => {
-    connectToRoom();
-    loadChatMessages();
-    loadTranscripts();
-    loadQAHistory();
-
-    // Subscribe to real-time updates
-    const chatSubscription = supabase
-      .channel(`chat-${webinar.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `webinar_id=eq.${webinar.id}` }, (payload) => {
-        setMessages((prev) => [...prev, payload.new]);
-      })
-      .subscribe();
-
-    const transcriptSubscription = supabase
-      .channel(`transcript-${webinar.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "transcripts", filter: `webinar_id=eq.${webinar.id}` }, (payload) => {
-        setTranscripts((prev) => [...prev, payload.new]);
-      })
-      .subscribe();
-
-    return () => {
-      disconnectFromRoom();
-      chatSubscription.unsubscribe();
-      transcriptSubscription.unsubscribe();
-    };
-  }, [webinar.id]);
-
-  const connectToRoom = async () => {
+  const connectToRoom = useCallback(async () => {
     try {
       // Get LiveKit token from API
       const response = await fetch("/api/livekit/token", {
@@ -120,7 +92,76 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
       console.error("Failed to connect to room:", error);
       toast.error("Failed to connect to webinar room");
     }
-  };
+  }, [userId, webinar.host_id, webinar.room_name]);
+
+  const loadChatMessages = useCallback(async () => {
+    const { data } = await supabase
+      .from("chat_messages")
+      .select("*, profiles:user_id(full_name)")
+      .eq("webinar_id", webinar.id)
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    if (data) setMessages(data);
+  }, [webinar.id]);
+
+  const loadTranscripts = useCallback(async () => {
+    const { data } = await supabase
+      .from("transcripts")
+      .select("*")
+      .eq("webinar_id", webinar.id)
+      .order("timestamp", { ascending: true })
+      .limit(100);
+
+    if (data) setTranscripts(data);
+  }, [webinar.id]);
+
+  const loadQAHistory = useCallback(async () => {
+    const { data } = await supabase
+      .from("qa_questions")
+      .select("*, profiles:user_id(full_name)")
+      .eq("webinar_id", webinar.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (data) setQaHistory(data);
+  }, [webinar.id]);
+
+  const disconnectFromRoom = useCallback(async () => {
+    if (room) {
+      room.disconnect();
+      setIsConnected(false);
+    }
+  }, [room]);
+
+  useEffect(() => {
+    connectToRoom();
+    loadChatMessages();
+    loadTranscripts();
+    loadQAHistory();
+
+    // Subscribe to real-time updates
+    const chatSubscription = supabase
+      .channel(`chat-${webinar.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `webinar_id=eq.${webinar.id}` }, (payload) => {
+        setMessages((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
+
+    const transcriptSubscription = supabase
+      .channel(`transcript-${webinar.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "transcripts", filter: `webinar_id=eq.${webinar.id}` }, (payload) => {
+        setTranscripts((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
+
+    return () => {
+      disconnectFromRoom();
+      chatSubscription.unsubscribe();
+      transcriptSubscription.unsubscribe();
+    };
+  }, [webinar.id, connectToRoom, disconnectFromRoom, loadChatMessages, loadQAHistory, loadTranscripts]);
+
 
   const enableLocalMedia = async (room: Room) => {
     try {
@@ -154,12 +195,6 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
     }
   };
 
-  const disconnectFromRoom = async () => {
-    if (room) {
-      room.disconnect();
-      setIsConnected(false);
-    }
-  };
 
   const toggleVideo = async () => {
     if (!room) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,11 +29,7 @@ export function HostDashboard({ userId }: { userId: string }) {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadWebinars();
-  }, [userId]);
-
-  const loadWebinars = async () => {
+  const loadWebinars = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("webinars")
@@ -61,7 +57,11 @@ export function HostDashboard({ userId }: { userId: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadWebinars();
+  }, [loadWebinars]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
