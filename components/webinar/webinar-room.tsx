@@ -165,7 +165,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
   }, [webinar.id, connectToRoom, disconnectFromRoom, loadChatMessages, loadQAHistory, loadTranscripts]);
 
 
-  const enableLocalMedia = async (room: Room) => {
+  async function enableLocalMedia(room: Room) {
     try {
       const { createLocalVideoTrack, createLocalAudioTrack } = await import("livekit-client");
       
@@ -186,7 +186,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
     } catch (error) {
       console.error("Failed to enable local media:", error);
     }
-  };
+  }
 
   const handleTrack = (track: RemoteTrack, participant: RemoteParticipant) => {
     if (track.kind === "video") {
