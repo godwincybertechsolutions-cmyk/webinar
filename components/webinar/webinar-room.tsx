@@ -117,7 +117,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
       console.error("Failed to connect to room:", error);
       toast.error("Failed to connect to webinar room");
     }
-  }, [userId, webinar.host_id, webinar.room_name, enableLocalMedia]);
+  }, [userId, webinar.host_id, webinar.room_name]);
 
   const loadChatMessages = useCallback(async () => {
     const { data } = await supabase
