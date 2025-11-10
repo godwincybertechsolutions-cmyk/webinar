@@ -33,6 +33,29 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
   const localAudioTrackRef = useRef<any>(null);
   const localVideoTrackRef = useRef<any>(null);
 
+  async function enableLocalMedia(room: Room) {
+    try {
+      const { createLocalVideoTrack, createLocalAudioTrack } = await import("livekit-client");
+      
+      if (isAudioEnabled) {
+        const audioTrack = await createLocalAudioTrack();
+        localAudioTrackRef.current = audioTrack;
+        await room.localParticipant.publishTrack(audioTrack);
+      }
+
+      if (isVideoEnabled) {
+        const videoTrack = await createLocalVideoTrack();
+        localVideoTrackRef.current = videoTrack;
+        if (localVideoRef.current) {
+          videoTrack.attach(localVideoRef.current);
+        }
+        await room.localParticipant.publishTrack(videoTrack);
+      }
+    } catch (error) {
+      console.error("Failed to enable local media:", error);
+    }
+  }
+
   const connectToRoom = useCallback(async () => {
     try {
       // Get LiveKit token from API
@@ -164,29 +187,6 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
     };
   }, [webinar.id, connectToRoom, disconnectFromRoom, loadChatMessages, loadQAHistory, loadTranscripts]);
 
-
-  async function enableLocalMedia(room: Room) {
-    try {
-      const { createLocalVideoTrack, createLocalAudioTrack } = await import("livekit-client");
-      
-      if (isAudioEnabled) {
-        const audioTrack = await createLocalAudioTrack();
-        localAudioTrackRef.current = audioTrack;
-        await room.localParticipant.publishTrack(audioTrack);
-      }
-
-      if (isVideoEnabled) {
-        const videoTrack = await createLocalVideoTrack();
-        localVideoTrackRef.current = videoTrack;
-        if (localVideoRef.current) {
-          videoTrack.attach(localVideoRef.current);
-        }
-        await room.localParticipant.publishTrack(videoTrack);
-      }
-    } catch (error) {
-      console.error("Failed to enable local media:", error);
-    }
-  }
 
   const handleTrack = (track: RemoteTrack, participant: RemoteParticipant) => {
     if (track.kind === "video") {
