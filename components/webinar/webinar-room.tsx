@@ -33,7 +33,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
   const localAudioTrackRef = useRef<any>(null);
   const localVideoTrackRef = useRef<any>(null);
 
-  // Move enableLocalMedia function above connectToRoom
+  // Define enableLocalMedia first
   const enableLocalMedia = useCallback(async (room: Room) => {
     try {
       const { createLocalVideoTrack, createLocalAudioTrack } = await import("livekit-client");
@@ -57,6 +57,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
     }
   }, [isAudioEnabled, isVideoEnabled]);
 
+  // Now define connectToRoom
   const connectToRoom = useCallback(async () => {
     try {
       // Get LiveKit token from API
@@ -106,7 +107,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
           return newMap;
         });
       });
-      
+
       // Enable local audio/video if host
       if (webinar.host_id === userId) {
         await enableLocalMedia(newRoom);
@@ -118,7 +119,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
       console.error("Failed to connect to room:", error);
       toast.error("Failed to connect to webinar room");
     }
-  }, [userId, webinar.host_id, webinar.room_name]);
+  }, [userId, webinar.host_id, webinar.room_name, enableLocalMedia]);
 
   const loadChatMessages = useCallback(async () => {
     const { data } = await supabase
