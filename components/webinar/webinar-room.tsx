@@ -50,18 +50,16 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
 
       const { token } = await response.json();
 
-      const { Room, VideoPresets, connect } = await import("livekit-client");
-      const newRoom = new Room({
+      const livekit = await import("livekit-client");
+      const newRoom = new livekit.Room({
         publishDefaults: {
           videoSimulcastLayers: [
-            VideoPresets.h720
+            livekit.VideoPresets.h720
           ],
         },
       });
 
-      await connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token, {
-        room: newRoom
-      });
+      await newRoom.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL!, token);
 
       newRoom.on(RoomEvent.TrackPublished, (publication, participant) => {
         if (publication.track) {
