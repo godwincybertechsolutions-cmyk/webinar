@@ -54,7 +54,7 @@ export function WebinarRoom({ webinar, userId }: WebinarRoomProps) {
       const newRoom = new livekit.Room({
         publishDefaults: {
           videoSimulcastLayers: [
-            { width: 1280, height: 720, fps: 30, encoding: { maxBitrate: 2000000, maxFramerate: 30 } }
+            { width: 1280, height: 720, encoding: { maxBitrate: 2000000, maxFramerate: 30 } }
           ],
         },
       });
